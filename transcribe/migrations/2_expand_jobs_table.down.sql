@@ -1,0 +1,20 @@
+-- Remove expanded columns from jobs table
+DROP INDEX IF EXISTS idx_jobs_video_id;
+DROP INDEX IF EXISTS idx_jobs_progress;
+DROP INDEX IF EXISTS idx_jobs_update_time;
+
+ALTER TABLE jobs DROP COLUMN IF EXISTS video_id;
+ALTER TABLE jobs DROP COLUMN IF EXISTS title;
+ALTER TABLE jobs DROP COLUMN IF EXISTS progress;
+ALTER TABLE jobs DROP COLUMN IF EXISTS start_time;
+ALTER TABLE jobs DROP COLUMN IF EXISTS update_time;
+ALTER TABLE jobs DROP COLUMN IF EXISTS log_file;
+ALTER TABLE jobs DROP COLUMN IF EXISTS output_dir;
+ALTER TABLE jobs DROP COLUMN IF EXISTS duration;
+ALTER TABLE jobs DROP COLUMN IF EXISTS file_count;
+ALTER TABLE jobs DROP COLUMN IF EXISTS file_size;
+ALTER TABLE jobs DROP COLUMN IF EXISTS stage;
+ALTER TABLE jobs DROP COLUMN IF EXISTS stage_progress;
+ALTER TABLE jobs DROP COLUMN IF EXISTS category_class;
+ALTER TABLE jobs DROP COLUMN IF EXISTS category_icon;
+ALTER TABLE jobs DROP COLUMN IF EXISTS status_text;

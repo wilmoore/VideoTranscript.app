@@ -1,0 +1,148 @@
+# =============================================================================
+# VideoTranscript.app - Comprehensive .gitignore
+# =============================================================================
+
+# =============================================================================
+# Security & Environment
+# =============================================================================
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.crt
+*.p12
+config.json
+secrets.json
+
+# =============================================================================
+# Go Language Specific
+# =============================================================================
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Application binaries
+dashboard
+web-dashboard
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Coverage reports
+coverage.html
+coverage/
+*.cover
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Build cache
+.cache/
+
+# =============================================================================
+# Application-Specific Data & Runtime
+# =============================================================================
+
+# Job data and processing state
+jobs.json
+
+# Processing outputs and downloads
+transcripts/
+downloads/
+uploads/
+
+# Logs and temporary processing files
+logs/
+*.log
+transcription.log
+dashboard.log
+nohup.out
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Audio/video processing artifacts
+*.wav
+*.mp4
+*.webm
+*.m4a
+
+# =============================================================================
+# Development Environment
+# =============================================================================
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# =============================================================================
+# Build & Deployment
+# =============================================================================
+
+# Build artifacts
+dist/
+build/
+bin/
+target/
+
+# Docker
+.dockerignore
+
+# =============================================================================
+# Encore Framework
+# =============================================================================
+encore.gen.go
+encore.gen.cue
+/.encore
+/encore.gen
+
+# =============================================================================
+# Node.js (if any frontend tooling is added)
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =============================================================================
+# Database & Backups
+# =============================================================================
+*.db
+*.sqlite
+*.sqlite3
+*.sql.backup
+dump.sql
+
+# =============================================================================
+# Testing & Debugging
+# =============================================================================
+*.prof
+debug
+*.debug
+trace.out

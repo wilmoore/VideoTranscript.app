@@ -1,0 +1,196 @@
+openapi: 3.0.0
+info:
+  title: VideoTranscript.app API
+  description: API for transcribing YouTube videos using Whisper
+  version: 1.0.0
+  contact:
+    name: VideoTranscript.app
+    url: https://videotranscript.app
+
+servers:
+  - url: https://api.videotranscript.app
+    description: Production server
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      tags:
+        - Health
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  message:
+                    type: string
+                    example: VideoTranscript.app API is running
+
+  /transcribe:
+    post:
+      summary: Transcribe a YouTube video
+      tags:
+        - Transcription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: YouTube video URL
+                  example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+      responses:
+        '200':
+          description: Transcription result (for short videos) or job ID (for longer videos)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/TranscriptionResult'
+                  - $ref: '#/components/schemas/JobResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /transcribe/{job_id}:
+    get:
+      summary: Get transcription job status and result
+      tags:
+        - Transcription
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Job ID returned from POST /transcribe
+          example: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        '200':
+          description: Job status and result (if completed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: API key for authentication
+
+  schemas:
+    TranscriptionResult:
+      type: object
+      properties:
+        transcript:
+          type: string
+          description: Full transcript text
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Segment'
+
+    JobResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          description: Unique job identifier
+
+    JobStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Job ID
+        status:
+          type: string
+          enum: [pending, running, complete, error]
+          description: Current job status
+        created_at:
+          type: string
+          format: date-time
+          description: Job creation timestamp
+        completed_at:
+          type: string
+          format: date-time
+          description: Job completion timestamp (if completed)
+        transcript:
+          type: string
+          description: Full transcript (if status is complete)
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Segment'
+          description: Transcript segments with timestamps (if status is complete)
+        error:
+          type: string
+          description: Error message (if status is error)
+
+    Segment:
+      type: object
+      properties:
+        start:
+          type: number
+          format: float
+          description: Segment start time in seconds
+        end:
+          type: number
+          format: float
+          description: Segment end time in seconds
+        text:
+          type: string
+          description: Transcript text for this segment
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
