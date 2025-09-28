@@ -1,13 +1,73 @@
-# VideoTranscript.app API
+# VideoTranscript.app
 
-A fast, simple API for transcribing YouTube videos using Go, yt-dlp, ffmpeg, and whisper.cpp.
+[![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org/doc/go1.23)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/wilmoore/VideoTranscript.app?style=flat&logo=github)](https://github.com/wilmoore/VideoTranscript.app/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/wilmoore/VideoTranscript.app)](https://github.com/wilmoore/VideoTranscript.app/issues)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)](Dockerfile)
+[![Encore.dev](https://img.shields.io/badge/Encore.dev-Ready-6366F1?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMjIgOFYxNkwxMiAyMkwyIDI2VjhMMTIgMloiIGZpbGw9IiM2MzY2RjEiLz4KPC9zdmc+)](https://encore.dev)
+
+> A fast, production-ready API for transcribing YouTube videos using Go with native libraries and OpenAI Whisper, featuring comprehensive async job processing.
 
 ## Features
 
 - **YouTube Video Transcription**: Convert YouTube videos to text with timestamps
-- **Fast Processing**: Optimized pipeline with Go libraries (yt-dlp, ffmpeg, whisper)
+- **Fast Processing**: Optimized pipeline with native Go libraries and FFmpeg
 - **Async & Sync**: Short videos (<2min) return transcripts immediately, longer videos use job queue
-- **Simple Pricing**: $1 for videos <10min, $2 for 10-30min, first job free
+- **Production Ready**: Database support, metrics, monitoring, and webhooks
+- **Multiple Output Formats**: SRT, VTT, JSON, TSV, and plain text
+- **Real-time Dashboard**: Live job monitoring and system metrics
+- **Docker & Cloud Ready**: Easy deployment with comprehensive guides
+
+## 📚 Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [🚀 Quick Start](#quick-start) | Get up and running in minutes |
+| [📖 API Documentation](docs/api.md) | Complete API reference with examples |
+| [🏗️ Architecture](docs/architecture.md) | Technical architecture and design patterns |
+| [🚀 Deployment](docs/deployment.md) | Production deployment guides |
+| [💻 Development](docs/development.md) | Development setup and workflows |
+| [🔧 Troubleshooting](docs/troubleshooting.md) | Common issues and solutions |
+| [🤝 Contributing](docs/contributing.md) | How to contribute to the project |
+| [📋 Changelog](docs/changelog.md) | Version history and changes |
+
+## Quick Start
+
+### 🐳 Docker (Recommended)
+```bash
+# Run with Docker (coming soon)
+docker run -d \
+  --name videotranscript \
+  -p 3000:3000 \
+  -e API_KEY=your-api-key-here \
+  wilmoore/videotranscript:latest
+```
+
+### 🚀 Local Development
+```bash
+# 1. Install dependencies
+# macOS
+brew install go ffmpeg
+pip install openai-whisper
+
+# Ubuntu/Debian
+sudo apt install golang-go ffmpeg python3-pip
+pip install openai-whisper
+
+# 2. Clone and run
+git clone https://github.com/wilmoore/VideoTranscript.app.git
+cd VideoTranscript.app
+cp .env.example .env  # Edit with your settings
+make dev
+```
+
+### ⚡ Encore.dev (Production)
+```bash
+# Deploy to production in one command
+curl -L https://encore.dev/install.sh | bash
+encore deploy --env production
+```
 
 ## API Endpoints
 
@@ -65,6 +125,8 @@ Possible statuses: `pending`, `running`, `complete`, `error`
 
 Health check endpoint (no authentication required).
 
+**📖 Complete API documentation:** [docs/api.md](docs/api.md)
+
 ## Usage Examples
 
 ### cURL
@@ -98,244 +160,71 @@ const response = await fetch('http://localhost:3000/transcribe', {
 const result = await response.json();
 ```
 
+**💻 More usage examples and SDKs:** [docs/api.md](docs/api.md)
+
 ## Development Setup
 
 ### Prerequisites
+- **Go 1.23+** - [Install Go](https://golang.org/doc/install)
+- **FFmpeg** - `brew install ffmpeg` (macOS) or `sudo apt install ffmpeg` (Linux)
+- **OpenAI Whisper** - `pip install openai-whisper`
 
-1. **Go 1.23+**
-   ```bash
-   # Install via official installer or package manager
-   # https://golang.org/doc/install
-   ```
+### Quick Setup
+```bash
+# Clone and setup
+git clone https://github.com/wilmoore/VideoTranscript.app.git
+cd VideoTranscript.app
+cp .env.example .env  # Edit with your settings
+make dev
+```
 
-2. **yt-dlp**
-   ```bash
-   # macOS
-   brew install yt-dlp
-
-   # Linux (Ubuntu/Debian)
-   sudo apt update && sudo apt install yt-dlp
-
-   # Or install via pip
-   pip install yt-dlp
-   ```
-
-3. **FFmpeg**
-   ```bash
-   # macOS
-   brew install ffmpeg
-
-   # Linux (Ubuntu/Debian)
-   sudo apt update && sudo apt install ffmpeg
-
-   # Windows
-   # Download from https://ffmpeg.org/download.html
-   ```
-
-4. **whisper.cpp**
-   ```bash
-   # Clone and build whisper.cpp
-   git clone https://github.com/ggerganov/whisper.cpp.git
-   cd whisper.cpp
-   make
-
-   # Download a model
-   bash ./models/download-ggml-model.sh base.en
-
-   # Copy binary to PATH or update PATH to include whisper.cpp directory
-   sudo cp main /usr/local/bin/whisper.cpp
-   # OR add to PATH: export PATH="$PATH:/path/to/whisper.cpp"
-
-   # Make sure model is accessible
-   sudo mkdir -p /usr/local/share/whisper
-   sudo cp models/ggml-base.en.bin /usr/local/share/whisper/
-   ```
-
-### Local Development
-
-1. **Clone and install dependencies:**
-   ```bash
-   git clone <your-repo>
-   cd videotranscript-app
-   go mod tidy
-   ```
-
-2. **Configure environment:**
-   ```bash
-   # Copy and edit .env
-   cp .env .env.local
-   vim .env.local
-   ```
-
-   ```env
-   PORT=3000
-   API_KEY=dev-api-key-12345
-   WORK_DIR=/tmp/videotranscript
-   MAX_VIDEO_LENGTH=1800
-   FREE_JOB_LIMIT=5
-   ```
-
-3. **Run the server:**
-   ```bash
-   # Using Makefile (recommended)
-   make dev           # Development mode with hot reload
-   make run           # Build and run
-
-   # Or manually
-   go run main.go
-   # or build and run
-   go build -o videotranscript-app && ./videotranscript-app
-   ```
-
-4. **Test the API:**
-   ```bash
-   # Using Makefile
-   make test          # Run all tests
-   make test-short    # Run quick tests
-
-   # Manual testing
-   # Health check
-   curl http://localhost:3000/health
-
-   # Test transcription (replace with your API key)
-   curl -X POST http://localhost:3000/transcribe \
-     -H "Authorization: Bearer dev-api-key-12345" \
-     -H "Content-Type: application/json" \
-     -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
-   ```
+**💻 Detailed development guide:** [docs/development.md](docs/development.md)
 
 ## Make Commands
 
-The project includes a comprehensive Makefile with organized tasks:
-
 ```bash
-# See all available commands
-make help
-
-# Development
-make setup         # Install development dependencies
-make dev           # Run with hot reload
-make run           # Build and run
-
-# Building
-make build         # Build for current platform
-make build-all     # Build for all platforms
-make install       # Install to $GOPATH/bin
-
-# Testing
+make help          # Show all available commands
+make dev           # Development server with hot reload
 make test          # Run all tests
-make test-short    # Run quick tests
-make test-coverage # Generate coverage report
-make benchmark     # Run benchmark tests
-make perf          # Run comprehensive performance tests
-
-# Code Quality
-make fmt           # Format code
-make lint          # Run linter
-make vet           # Run go vet
-make check         # Run all quality checks
-
-# Docker
-make docker-build  # Build Docker image
-make docker-run    # Run Docker container
-
-# Utilities
-make clean         # Clean build artifacts
-make deps          # Download dependencies
-make version       # Show version info
+make build         # Build for current platform
+make check         # Run quality checks (fmt + lint + vet + test)
 ```
+
+**🛠️ Complete command reference:** [docs/development.md#using-the-makefile](docs/development.md#using-the-makefile)
 
 ## Production Deployment
 
-### Docker Deployment (Recommended)
-
-Create a `Dockerfile`:
-
-```dockerfile
-FROM golang:1.23-alpine AS builder
-
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-
-COPY . .
-RUN go build -o videotranscript-app
-
-FROM alpine:latest
-
-# Install runtime dependencies
-RUN apk add --no-cache \
-    ffmpeg \
-    python3 \
-    py3-pip \
-    && pip3 install yt-dlp
-
-# Install whisper.cpp
-RUN apk add --no-cache git make g++ \
-    && git clone https://github.com/ggerganov/whisper.cpp.git /tmp/whisper \
-    && cd /tmp/whisper \
-    && make \
-    && cp main /usr/local/bin/whisper.cpp \
-    && bash ./models/download-ggml-model.sh base.en \
-    && mkdir -p /usr/local/share/whisper \
-    && cp models/ggml-base.en.bin /usr/local/share/whisper/ \
-    && rm -rf /tmp/whisper
-
-WORKDIR /app
-COPY --from=builder /app/videotranscript-app .
-COPY .env .
-
-EXPOSE 3000
-
-CMD ["./videotranscript-app"]
-```
-
-Build and run:
+### 🐳 Docker (Recommended)
 ```bash
 docker build -t videotranscript-app .
 docker run -p 3000:3000 --env-file .env videotranscript-app
 ```
 
-### Cloud Deployment
+### ⚡ Encore.dev (Zero-Config)
+```bash
+encore deploy --env production
+```
 
-**Environment Variables to Set:**
-- `PORT`: Server port (default: 3000)
-- `API_KEY`: API key for authentication
-- `WORK_DIR`: Working directory for temp files
-- `MAX_VIDEO_LENGTH`: Max video length in seconds
-- `FREE_JOB_LIMIT`: Free jobs per user
+### ☁️ Cloud Platforms
+- **AWS ECS/Fargate** - Container-based deployment
+- **Google Cloud Run** - Serverless containers
+- **Azure Container Instances** - Managed containers
+- **Kubernetes** - Full orchestration
 
-**Deployment Checklist:**
-1. Install Go, yt-dlp, ffmpeg, whisper.cpp on the server
-2. Set environment variables
-3. Configure firewall to allow traffic on your port
-4. Set up process manager (systemd, PM2, or Docker)
-5. Configure reverse proxy (nginx/traefik) for HTTPS
-6. Monitor logs and set up health checks
+**🚀 Complete deployment guides:** [docs/deployment.md](docs/deployment.md)
 
 ## Architecture
 
-- **Framework**: Fiber (Go) - Fast HTTP framework
-- **Job Queue**: In-memory map (simple MVP, can be upgraded to Redis)
-- **Video Download**: go-ytdlp (Go wrapper for yt-dlp)
-- **Audio Processing**: ffmpeg-go (Go wrapper for FFmpeg)
-- **Transcription**: whisper.cpp via command execution
-- **Auth**: API key Bearer token
-- **Storage**: Temporary files in configurable work directory
+**Three-Stage Pipeline:**
+1. **Download** - Extract audio from YouTube URLs (native Go library)
+2. **Normalize** - Convert to 16kHz mono WAV (FFmpeg)
+3. **Transcribe** - Generate timestamped transcripts (OpenAI Whisper)
 
-## Performance & Scaling
+**Smart Processing:**
+- Videos ≤2min: Synchronous (immediate results)
+- Videos >2min: Asynchronous (job queue with status tracking)
 
-**Current Implementation (MVP):**
-- In-memory job queue (single instance)
-- Synchronous processing for videos <2min
-- Asynchronous processing for longer videos
-
-**Production Scaling:**
-- Replace in-memory queue with Redis
-- Add horizontal scaling with load balancer
-- Implement caching for repeated videos
-- Add database for user management and billing
-- Use dedicated storage (S3) for temporary files
+**🏗️ Detailed architecture:** [docs/architecture.md](docs/architecture.md)
 
 ## API Documentation
 
@@ -343,34 +232,28 @@ Full OpenAPI/Swagger documentation available at [`docs/swagger.yaml`](docs/swagg
 
 ## Troubleshooting
 
-**Common Issues:**
-
-1. **"whisper.cpp: command not found"**
-   - Make sure whisper.cpp is built and in your PATH
-   - Or update the command path in `utils/transcription.go`
-
-2. **"ggml-base.en.bin: no such file"**
-   - Download the whisper model: `bash ./models/download-ggml-model.sh base.en`
-   - Make sure it's accessible at the path specified in the code
-
-3. **"ffmpeg: command not found"**
-   - Install FFmpeg: `brew install ffmpeg` (macOS) or `apt install ffmpeg` (Linux)
-
-4. **"yt-dlp failed"**
-   - Update yt-dlp: `pip install --upgrade yt-dlp`
-   - Some videos may be restricted or unavailable
-
-**Debug Mode:**
-Set environment variable `DEBUG=1` for detailed logging.
+**Common issues and solutions:** [docs/troubleshooting.md](docs/troubleshooting.md)
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+We welcome contributions! Please see our [contributing guide](docs/contributing.md) for details on:
+- Setting up your development environment
+- Coding standards and best practices
+- Submitting issues and pull requests
+- Community guidelines
 
 ## License
 
-MIT License - see LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**⭐ Star this repo if it's helpful!**
+
+[🐛 Report Bug](https://github.com/wilmoore/VideoTranscript.app/issues) • [✨ Request Feature](https://github.com/wilmoore/VideoTranscript.app/issues) • [💬 Discussions](https://github.com/wilmoore/VideoTranscript.app/discussions)
+
+**Built with ❤️ by [wilmoore](https://github.com/wilmoore)**
+
+</div>

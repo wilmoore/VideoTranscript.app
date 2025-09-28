@@ -6,6 +6,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > A Go-based API for transcribing YouTube videos using yt-dlp, FFmpeg, and whisper.cpp with async job processing.
 
+## 📚 Documentation Structure
+
+This project has comprehensive documentation organized in the `docs/` directory:
+
+| Document | Purpose | When to Reference |
+|----------|---------|-------------------|
+| [📖 API Documentation](docs/api.md) | Complete API reference, endpoints, examples | API changes, endpoint questions, integration help |
+| [🏗️ Architecture](docs/architecture.md) | Technical architecture, design patterns, scaling | Understanding codebase structure, performance questions |
+| [🚀 Deployment](docs/deployment.md) | Production deployment guides | Deployment issues, configuration questions |
+| [💻 Development](docs/development.md) | Development setup, workflows, testing | Setting up environment, development practices |
+| [🔧 Troubleshooting](docs/troubleshooting.md) | Common issues and solutions | Error resolution, debugging help |
+| [🤝 Contributing](docs/contributing.md) | Contribution guidelines and standards | Code style, PR process, community guidelines |
+| [📋 Changelog](docs/changelog.md) | Version history and changes | Understanding changes, version differences |
+
+**Always reference relevant documentation when helping with specific topics.**
+
 ## Development Commands
 
 All development operations use the comprehensive Makefile:
@@ -31,6 +47,8 @@ make check         # Run fmt + lint + vet + test-short
 go test -run TestSpecificFunction ./package
 go test -v -run TestPostTranscribe_ValidationErrors ./handlers
 ```
+
+**📖 Complete command reference and development workflows:** [docs/development.md](docs/development.md)
 
 Environment configuration via `.env` file:
 ```bash
@@ -61,6 +79,8 @@ The application implements a three-stage video transcription pipeline:
 - `PostTranscribe`: Creates job → determines sync/async based on duration → launches goroutine
 - `GetTranscribeJob`: Returns job status and results for async jobs
 - Background processing calls `lib.ProcessTranscription` which orchestrates the pipeline
+
+**🏗️ Detailed architecture documentation:** [docs/architecture.md](docs/architecture.md)
 
 ### Package Organization
 - `main.go`: Fiber server setup, middleware, routing
@@ -111,6 +131,8 @@ Environment variables loaded once at startup via `config.Load()`. No runtime con
 
 Request/response handled via `models.TranscribeRequest` and `models.TranscribeResponse` structs.
 
+**📖 Complete API reference with examples:** [docs/api.md](docs/api.md)
+
 ## Development Notes
 
 - Use `make dev` for development server with automatic restarts
@@ -118,3 +140,25 @@ Request/response handled via `models.TranscribeRequest` and `models.TranscribeRe
 - Load tests have strict performance requirements that may fail without external deps
 - The `parseDuration` function currently returns hardcoded 120 seconds (TODO: implement actual parsing)
 - Job queue is in-memory only - jobs lost on restart (suitable for MVP)
+
+**💻 Complete development setup guide:** [docs/development.md](docs/development.md)
+
+## Troubleshooting Reference
+
+For common issues and solutions:
+- **External tool dependencies**: whisper.cpp, yt-dlp, ffmpeg installation issues
+- **Processing failures**: Job stuck in pending, download/transcription errors
+- **Performance issues**: Memory usage, slow processing, disk space
+- **Deployment problems**: Docker, cloud platform, networking issues
+
+**🔧 Complete troubleshooting guide:** [docs/troubleshooting.md](docs/troubleshooting.md)
+
+## Production Deployment
+
+For production deployments, refer to comprehensive guides covering:
+- **Docker**: Container builds and orchestration
+- **Cloud Platforms**: AWS, GCP, Azure deployment options
+- **Encore.dev**: Zero-config production deployment
+- **Traditional Servers**: SystemD, process management, reverse proxy setup
+
+**🚀 Complete deployment guides:** [docs/deployment.md](docs/deployment.md)
