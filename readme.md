@@ -9,6 +9,8 @@
 
 > A fast, production-ready API for transcribing YouTube videos using Go with native libraries and OpenAI Whisper, featuring comprehensive async job processing.
 
+![logo](./docs/logo.png)
+
 ## Features
 
 - **YouTube Video Transcription**: Convert YouTube videos to text with timestamps
