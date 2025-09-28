@@ -20,6 +20,20 @@ var startTime = time.Now()
 var fileModTime time.Time
 var fileMutex sync.RWMutex
 
+// Demo transcript data for testing
+var demoTranscripts = map[string]Job{
+	"job_1234567890": {
+		Transcript: "Welcome to this demonstration video. Today we're going to explore the amazing world of video transcription and how it can transform your content workflow. This technology has revolutionized the way we process and understand multimedia content, making it accessible to everyone.",
+		Segments: []TranscriptSegment{
+			{Start: 0.0, End: 4.5, Text: "Welcome to this demonstration video."},
+			{Start: 4.5, End: 12.8, Text: "Today we're going to explore the amazing world of video transcription"},
+			{Start: 12.8, End: 18.2, Text: "and how it can transform your content workflow."},
+			{Start: 18.2, End: 25.4, Text: "This technology has revolutionized the way we process"},
+			{Start: 25.4, End: 32.1, Text: "and understand multimedia content, making it accessible to everyone."},
+		},
+	},
+}
+
 type Job struct {
 	ID         string    `json:"id"`
 	VideoID    string    `json:"video_id"`
@@ -39,6 +53,15 @@ type Job struct {
 	CategoryClass string `json:"category_class"`
 	CategoryIcon  string `json:"category_icon"`
 	StatusText    string `json:"status_text"`
+	// Transcript fields
+	Transcript    string          `json:"transcript,omitempty"`
+	Segments      []TranscriptSegment `json:"segments,omitempty"`
+}
+
+type TranscriptSegment struct {
+	Start float64 `json:"start"`
+	End   float64 `json:"end"`
+	Text  string  `json:"text"`
 }
 
 const dashboardHTML = `
@@ -2257,8 +2280,167 @@ const transactionDetailHTML = `
                     </div>
                 </div>
             </div>
+
+            {{if .Job.Transcript}}
+            <!-- Transcript Section -->
+            <div class="detail-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h3 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;">📝 Transcript</h3>
+                    <div style="display: flex; gap: 12px;">
+                        <button onclick="copyTranscript()" class="action-btn copy-btn" title="Copy transcript">
+                            📋 Copy
+                        </button>
+                        <button onclick="downloadTranscript('txt')" class="action-btn download-btn" title="Download as text">
+                            📄 TXT
+                        </button>
+                        <button onclick="downloadTranscript('srt')" class="action-btn download-btn" title="Download as SRT">
+                            🎬 SRT
+                        </button>
+                        <button onclick="downloadTranscript('vtt')" class="action-btn download-btn" title="Download as VTT">
+                            📺 VTT
+                        </button>
+                        <button onclick="downloadTranscript('json')" class="action-btn download-btn" title="Download as JSON">
+                            🔧 JSON
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search Box -->
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="transcript-search" placeholder="🔍 Search in transcript..."
+                           style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
+                           onkeyup="searchTranscript()" />
+                </div>
+
+                <!-- Transcript Content -->
+                <div class="transcript-container">
+                    {{if .Job.Segments}}
+                    <!-- Timestamped Segments -->
+                    <div class="transcript-segments" id="transcript-segments">
+                        {{range .Job.Segments}}
+                        <div class="transcript-segment" data-start="{{.Start}}" data-end="{{.End}}">
+                            <span class="timestamp" onclick="seekToTime({{.Start}})">
+                                {{formatTime .Start}}
+                            </span>
+                            <span class="segment-text">{{.Text}}</span>
+                        </div>
+                        {{end}}
+                    </div>
+                    {{else}}
+                    <!-- Plain Text Transcript -->
+                    <div class="transcript-text" id="transcript-text">
+                        {{.Job.Transcript}}
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{else}}
+            <!-- No Transcript Available -->
+            {{if eq .Job.Status "completed"}}
+            <div class="detail-card">
+                <div style="text-align: center; padding: 40px; color: #6b7280;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+                    <h3 style="margin: 0 0 8px 0; color: #374151;">No Transcript Available</h3>
+                    <p style="margin: 0;">The transcription completed but no transcript content was found.</p>
+                </div>
+            </div>
+            {{else if eq .Job.Status "failed"}}
+            <div class="detail-card">
+                <div style="text-align: center; padding: 40px; color: #ef4444;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+                    <h3 style="margin: 0 0 8px 0; color: #dc2626;">Transcription Failed</h3>
+                    <p style="margin: 0; color: #6b7280;">The transcription process encountered an error.</p>
+                    {{if .Job.LogFile}}
+                    <button onclick="viewLogs()" style="margin-top: 16px; padding: 8px 16px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">
+                        View Error Log
+                    </button>
+                    {{end}}
+                </div>
+            </div>
+            {{else}}
+            <div class="detail-card">
+                <div style="text-align: center; padding: 40px; color: #6b7280;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+                    <h3 style="margin: 0 0 8px 0; color: #374151;">Transcription In Progress</h3>
+                    <p style="margin: 0;">The transcript will appear here once processing is complete.</p>
+                </div>
+            </div>
+            {{end}}
+            {{end}}
         </div>
     </div>
+
+    <style>
+        .action-btn {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+        .copy-btn:hover {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+        }
+        .download-btn:hover {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #047857;
+        }
+        .transcript-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            background: #fafafa;
+        }
+        .transcript-segments .transcript-segment {
+            margin-bottom: 12px;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        .transcript-segment:hover {
+            background: #f3f4f6;
+        }
+        .transcript-segment.highlight {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+        }
+        .timestamp {
+            display: inline-block;
+            width: 80px;
+            color: #6b7280;
+            font-size: 12px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            cursor: pointer;
+            margin-right: 12px;
+            text-align: right;
+        }
+        .timestamp:hover {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+        .segment-text {
+            color: #111827;
+            line-height: 1.5;
+        }
+        .transcript-text {
+            color: #111827;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+    </style>
 
     <script>
         function copyToClipboard(text) {
@@ -2275,6 +2457,104 @@ const transactionDetailHTML = `
                     }, 200);
                 });
             });
+        }
+
+        // Transcript functionality
+        function copyTranscript() {
+            const transcriptElement = document.getElementById('transcript-text') || document.getElementById('transcript-segments');
+            let text = '';
+
+            if (document.getElementById('transcript-segments')) {
+                // Copy timestamped segments
+                const segments = document.querySelectorAll('.transcript-segment');
+                segments.forEach(segment => {
+                    const timestamp = segment.querySelector('.timestamp').textContent;
+                    const segmentText = segment.querySelector('.segment-text').textContent;
+                    text += '[' + timestamp + '] ' + segmentText + '\n';
+                });
+            } else if (document.getElementById('transcript-text')) {
+                // Copy plain text
+                text = document.getElementById('transcript-text').textContent;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                // Visual feedback
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                btn.style.background = '#d1fae5';
+                btn.style.borderColor = '#10b981';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                }, 2000);
+            });
+        }
+
+        function downloadTranscript(format) {
+            const jobId = window.location.pathname.split('/').pop();
+            window.open('/download/' + jobId + '/' + format, '_blank');
+        }
+
+        function searchTranscript() {
+            const searchTerm = document.getElementById('transcript-search').value.toLowerCase();
+            const segments = document.querySelectorAll('.transcript-segment');
+            const transcriptText = document.getElementById('transcript-text');
+
+            if (segments.length > 0) {
+                // Search in timestamped segments
+                segments.forEach(segment => {
+                    const text = segment.querySelector('.segment-text').textContent.toLowerCase();
+                    if (searchTerm === '' || text.includes(searchTerm)) {
+                        segment.style.display = 'block';
+                        if (searchTerm !== '') {
+                            segment.classList.add('highlight');
+                        } else {
+                            segment.classList.remove('highlight');
+                        }
+                    } else {
+                        segment.style.display = 'none';
+                        segment.classList.remove('highlight');
+                    }
+                });
+            } else if (transcriptText) {
+                // Simple highlight for plain text (basic implementation)
+                const originalText = transcriptText.getAttribute('data-original') || transcriptText.textContent;
+                if (!transcriptText.getAttribute('data-original')) {
+                    transcriptText.setAttribute('data-original', originalText);
+                }
+
+                if (searchTerm === '') {
+                    transcriptText.innerHTML = originalText;
+                } else {
+                    const regex = new RegExp('(' + searchTerm + ')', 'gi');
+                    transcriptText.innerHTML = originalText.replace(regex, '<mark style="background: #fef3c7; padding: 2px;">$1</mark>');
+                }
+            }
+        }
+
+        function seekToTime(seconds) {
+            // This would integrate with a video player if available
+            // For now, just show a tooltip with the timestamp
+            alert('Seeking to ' + formatTime(seconds));
+        }
+
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+
+            if (hours > 0) {
+                return hours + ':' + minutes.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
+            } else {
+                return minutes + ':' + secs.toString().padStart(2, '0');
+            }
+        }
+
+        function viewLogs() {
+            const jobId = window.location.pathname.split('/').pop();
+            window.open('/logs/' + jobId, '_blank');
         }
     </script>
 </body>
@@ -2348,8 +2628,11 @@ func main() {
 	http.HandleFunc("/api/jobs", jobsHandler)
 	http.HandleFunc("/add-job", addJobHandler)
 	http.HandleFunc("/transaction/", transactionDetailHandler)
+	http.HandleFunc("/download/", downloadHandler)
+	http.HandleFunc("/logs/", logsHandler)
 	http.HandleFunc("/events", sseHandler)
 	http.HandleFunc("/api/reload-check", reloadCheckHandler)
+	http.HandleFunc("/demo/add-transcript/", demoAddTranscriptHandler)
 
 	port := findAvailablePort(8765)
 
@@ -2616,7 +2899,27 @@ func transactionDetailHandler(w http.ResponseWriter, r *http.Request) {
 
 	updateJobStatuses(jobs)
 
-	tmpl, err := template.New("transaction").Parse(transactionDetailHTML)
+	// Merge demo transcript data if available
+	if demoData, exists := demoTranscripts[jobID]; exists {
+		job.Transcript = demoData.Transcript
+		job.Segments = demoData.Segments
+	}
+
+	// Template functions
+	funcMap := template.FuncMap{
+		"formatTime": func(seconds float64) string {
+			hours := int(seconds) / 3600
+			minutes := (int(seconds) % 3600) / 60
+			secs := int(seconds) % 60
+
+			if hours > 0 {
+				return fmt.Sprintf("%d:%02d:%02d", hours, minutes, secs)
+			}
+			return fmt.Sprintf("%d:%02d", minutes, secs)
+		},
+	}
+
+	tmpl, err := template.New("transaction").Funcs(funcMap).Parse(transactionDetailHTML)
 	if err != nil {
 		http.Error(w, "Template error", 500)
 		return
@@ -2630,6 +2933,193 @@ func transactionDetailHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	tmpl.Execute(w, data)
+}
+
+func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse URL: /download/{jobId}/{format}
+	pathParts := strings.Split(strings.TrimPrefix(r.URL.Path, "/download/"), "/")
+	if len(pathParts) != 2 {
+		http.Error(w, "Invalid download URL format. Use /download/{jobId}/{format}", 400)
+		return
+	}
+
+	jobID := pathParts[0]
+	format := pathParts[1]
+
+	// Validate format
+	validFormats := map[string]string{
+		"txt":  "text/plain",
+		"srt":  "application/x-subrip",
+		"vtt":  "text/vtt",
+		"json": "application/json",
+	}
+
+	mimeType, validFormat := validFormats[format]
+	if !validFormat {
+		http.Error(w, "Invalid format. Supported: txt, srt, vtt, json", 400)
+		return
+	}
+
+	// Find job
+	jobs := loadJobs()
+	var job *Job
+	for i := range jobs {
+		if jobs[i].ID == jobID {
+			job = &jobs[i]
+			break
+		}
+	}
+
+	if job == nil {
+		http.Error(w, "Job not found", 404)
+		return
+	}
+
+	// Merge demo transcript data if available
+	if demoData, exists := demoTranscripts[jobID]; exists {
+		job.Transcript = demoData.Transcript
+		job.Segments = demoData.Segments
+	}
+
+	if job.Transcript == "" {
+		http.Error(w, "No transcript available for this job", 404)
+		return
+	}
+
+	// Generate content based on format
+	var content string
+	var filename string
+
+	switch format {
+	case "txt":
+		content = job.Transcript
+		filename = fmt.Sprintf("transcript_%s.txt", job.VideoID)
+
+	case "srt":
+		content = generateSRT(job.Segments, job.Transcript)
+		filename = fmt.Sprintf("transcript_%s.srt", job.VideoID)
+
+	case "vtt":
+		content = generateVTT(job.Segments, job.Transcript)
+		filename = fmt.Sprintf("transcript_%s.vtt", job.VideoID)
+
+	case "json":
+		jsonData := map[string]interface{}{
+			"job_id":     job.ID,
+			"video_id":   job.VideoID,
+			"title":      job.Title,
+			"url":        job.URL,
+			"transcript": job.Transcript,
+			"segments":   job.Segments,
+			"duration":   job.Duration,
+			"created_at": job.StartTime,
+		}
+		contentBytes, _ := json.MarshalIndent(jsonData, "", "  ")
+		content = string(contentBytes)
+		filename = fmt.Sprintf("transcript_%s.json", job.VideoID)
+	}
+
+	// Set headers
+	w.Header().Set("Content-Type", mimeType)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(content)))
+
+	// Write content
+	w.Write([]byte(content))
+}
+
+func generateSRT(segments []TranscriptSegment, fallbackText string) string {
+	if len(segments) == 0 {
+		// Fallback for plain text
+		return fmt.Sprintf("1\n00:00:00,000 --> 99:59:59,999\n%s\n", fallbackText)
+	}
+
+	var srt strings.Builder
+	for i, segment := range segments {
+		start := formatSRTTime(segment.Start)
+		end := formatSRTTime(segment.End)
+		srt.WriteString(fmt.Sprintf("%d\n%s --> %s\n%s\n\n", i+1, start, end, segment.Text))
+	}
+	return srt.String()
+}
+
+func generateVTT(segments []TranscriptSegment, fallbackText string) string {
+	var vtt strings.Builder
+	vtt.WriteString("WEBVTT\n\n")
+
+	if len(segments) == 0 {
+		// Fallback for plain text
+		vtt.WriteString("00:00:00.000 --> 99:59:59.999\n")
+		vtt.WriteString(fallbackText)
+		vtt.WriteString("\n")
+		return vtt.String()
+	}
+
+	for _, segment := range segments {
+		start := formatVTTTime(segment.Start)
+		end := formatVTTTime(segment.End)
+		vtt.WriteString(fmt.Sprintf("%s --> %s\n%s\n\n", start, end, segment.Text))
+	}
+	return vtt.String()
+}
+
+func formatSRTTime(seconds float64) string {
+	hours := int(seconds) / 3600
+	minutes := (int(seconds) % 3600) / 60
+	secs := int(seconds) % 60
+	millis := int((seconds - float64(int(seconds))) * 1000)
+	return fmt.Sprintf("%02d:%02d:%02d,%03d", hours, minutes, secs, millis)
+}
+
+func formatVTTTime(seconds float64) string {
+	hours := int(seconds) / 3600
+	minutes := (int(seconds) % 3600) / 60
+	secs := int(seconds) % 60
+	millis := int((seconds - float64(int(seconds))) * 1000)
+	return fmt.Sprintf("%02d:%02d:%02d.%03d", hours, minutes, secs, millis)
+}
+
+func logsHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse URL: /logs/{jobId}
+	jobID := strings.TrimPrefix(r.URL.Path, "/logs/")
+	if jobID == "" {
+		http.Error(w, "Job ID required", 400)
+		return
+	}
+
+	// Find job
+	jobs := loadJobs()
+	var job *Job
+	for i := range jobs {
+		if jobs[i].ID == jobID {
+			job = &jobs[i]
+			break
+		}
+	}
+
+	if job == nil {
+		http.Error(w, "Job not found", 404)
+		return
+	}
+
+	if job.LogFile == "" {
+		http.Error(w, "No log file available for this job", 404)
+		return
+	}
+
+	// Try to read the log file
+	content, err := os.ReadFile(job.LogFile)
+	if err != nil {
+		http.Error(w, "Log file not found or could not be read", 404)
+		return
+	}
+
+	// Set headers
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s_log.txt\"", job.VideoID))
+
+	// Write content
+	w.Write(content)
 }
 
 func sseHandler(w http.ResponseWriter, r *http.Request) {
@@ -3034,4 +3524,27 @@ func reloadCheckHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(response)
+}
+
+func demoAddTranscriptHandler(w http.ResponseWriter, r *http.Request) {
+	jobID := strings.TrimPrefix(r.URL.Path, "/demo/add-transcript/")
+	if jobID == "" {
+		http.Error(w, "Job ID required", http.StatusBadRequest)
+		return
+	}
+
+	// Check if we have demo data for this job
+	if demoData, exists := demoTranscripts[jobID]; exists {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"message": "Demo transcript data loaded for job " + jobID,
+			"transcript": demoData.Transcript,
+			"segments": demoData.Segments,
+		})
+		return
+	}
+
+	http.Error(w, "No demo data available for this job", http.StatusNotFound)
 }
