@@ -7,25 +7,16 @@ This guide covers everything you need to know for developing and contributing to
 ### Prerequisites
 
 1. **Go 1.23+** - [Install Go](https://golang.org/doc/install)
-2. **yt-dlp** - YouTube video downloader
-3. **FFmpeg** - Audio processing
-4. **whisper.cpp** - AI transcription engine
+2. **FFmpeg** - Audio processing
+3. **OpenAI Whisper** - AI transcription engine (Python package)
 
 ### Installation
 
 #### macOS (using Homebrew)
 ```bash
 # Install dependencies
-brew install go yt-dlp ffmpeg
-
-# Install whisper.cpp
-git clone https://github.com/ggerganov/whisper.cpp.git
-cd whisper.cpp
-make
-sudo cp main /usr/local/bin/whisper.cpp
-bash ./models/download-ggml-model.sh base.en
-sudo mkdir -p /usr/local/share/whisper
-sudo cp models/ggml-base.en.bin /usr/local/share/whisper/
+brew install go ffmpeg
+pip install openai-whisper
 ```
 
 #### Ubuntu/Debian
@@ -39,16 +30,7 @@ source ~/.bashrc
 # Install other dependencies
 sudo apt update
 sudo apt install -y ffmpeg python3-pip
-pip3 install yt-dlp
-
-# Install whisper.cpp
-git clone https://github.com/ggerganov/whisper.cpp.git
-cd whisper.cpp
-make
-sudo cp main /usr/local/bin/whisper.cpp
-bash ./models/download-ggml-model.sh base.en
-sudo mkdir -p /usr/local/share/whisper
-sudo cp models/ggml-base.en.bin /usr/local/share/whisper/
+pip install openai-whisper
 ```
 
 ### Project Setup
@@ -145,9 +127,7 @@ LOG_LEVEL=debug
 # DATABASE_URL=postgresql://user:pass@localhost:5432/videotranscript_dev
 
 # External Tool Paths (if not in PATH)
-# YTDLP_PATH=/usr/local/bin/yt-dlp
 # FFMPEG_PATH=/usr/local/bin/ffmpeg
-# WHISPER_PATH=/usr/local/bin/whisper.cpp
 ```
 
 ## Code Structure
@@ -178,9 +158,9 @@ VideoTranscript.app/
 // HTTP Framework
 github.com/gofiber/fiber/v2
 
-// External Tool Wrappers
-github.com/lrstanley/go-ytdlp   // YouTube downloading
-github.com/u2takey/ffmpeg-go   // Audio processing
+// Native Go Libraries
+github.com/lrstanley/go-ytdlp   // YouTube downloading (native Go)
+github.com/u2takey/ffmpeg-go   // FFmpeg wrapper for audio processing
 
 // Utilities
 github.com/google/uuid          // Job ID generation

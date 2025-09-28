@@ -7,12 +7,12 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker&logoColor=white)](Dockerfile)
 [![Encore.dev](https://img.shields.io/badge/Encore.dev-Ready-6366F1?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMjIgOFYxNkwxMiAyMkwyIDI2VjhMMTIgMloiIGZpbGw9IiM2MzY2RjEiLz4KPC9zdmc+)](https://encore.dev)
 
-> A fast, production-ready API for transcribing YouTube videos using Go, yt-dlp, FFmpeg, and whisper.cpp with comprehensive async job processing.
+> A fast, production-ready API for transcribing YouTube videos using Go with native libraries and OpenAI Whisper, featuring comprehensive async job processing.
 
 ## Features
 
 - **YouTube Video Transcription**: Convert YouTube videos to text with timestamps
-- **Fast Processing**: Optimized pipeline with Go libraries (yt-dlp, ffmpeg, whisper)
+- **Fast Processing**: Optimized pipeline with native Go libraries and FFmpeg
 - **Async & Sync**: Short videos (<2min) return transcripts immediately, longer videos use job queue
 - **Production Ready**: Database support, metrics, monitoring, and webhooks
 - **Multiple Output Formats**: SRT, VTT, JSON, TSV, and plain text
@@ -46,19 +46,16 @@ docker run -d \
 
 ### 🚀 Local Development
 ```bash
-# 1. Install dependencies (macOS)
-brew install go yt-dlp ffmpeg
-# For other platforms, see docs/development.md
+# 1. Install dependencies
+# macOS
+brew install go ffmpeg
+pip install openai-whisper
 
-# 2. Install whisper.cpp
-git clone https://github.com/ggerganov/whisper.cpp.git
-cd whisper.cpp && make
-sudo cp main /usr/local/bin/whisper.cpp
-bash ./models/download-ggml-model.sh base.en
-sudo mkdir -p /usr/local/share/whisper
-sudo cp models/ggml-base.en.bin /usr/local/share/whisper/
+# Ubuntu/Debian
+sudo apt install golang-go ffmpeg python3-pip
+pip install openai-whisper
 
-# 3. Clone and run
+# 2. Clone and run
 git clone https://github.com/wilmoore/VideoTranscript.app.git
 cd VideoTranscript.app
 cp .env.example .env  # Edit with your settings
@@ -169,9 +166,8 @@ const result = await response.json();
 
 ### Prerequisites
 - **Go 1.23+** - [Install Go](https://golang.org/doc/install)
-- **yt-dlp** - `brew install yt-dlp` (macOS) or `pip install yt-dlp`
 - **FFmpeg** - `brew install ffmpeg` (macOS) or `sudo apt install ffmpeg` (Linux)
-- **whisper.cpp** - [Installation guide](docs/development.md#prerequisites)
+- **OpenAI Whisper** - `pip install openai-whisper`
 
 ### Quick Setup
 ```bash
@@ -220,9 +216,9 @@ encore deploy --env production
 ## Architecture
 
 **Three-Stage Pipeline:**
-1. **Download** - Extract audio from YouTube URLs (yt-dlp)
+1. **Download** - Extract audio from YouTube URLs (native Go library)
 2. **Normalize** - Convert to 16kHz mono WAV (FFmpeg)
-3. **Transcribe** - Generate timestamped transcripts (whisper.cpp)
+3. **Transcribe** - Generate timestamped transcripts (OpenAI Whisper)
 
 **Smart Processing:**
 - Videos ≤2min: Synchronous (immediate results)
