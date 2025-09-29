@@ -145,4 +145,5 @@ dump.sql
 *.prof
 debug
 *.debug
-trace.out
+trace.outmodels/*.bin
+*.bin
