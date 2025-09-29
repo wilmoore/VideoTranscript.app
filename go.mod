@@ -6,6 +6,7 @@ toolchain go1.24.7
 
 require (
 	encore.dev v1.41.4
+	github.com/AssemblyAI/assemblyai-go-sdk v1.8.0
 	github.com/google/uuid v1.6.0
 	github.com/lrstanley/go-ytdlp v1.2.4
 	github.com/stretchr/testify v1.11.1

@@ -233,6 +233,61 @@ deploy-prod: check build ## Deploy to production environment
 	@echo "$(BLUE)Deploying to production...$(NC)"
 	@echo "$(YELLOW)Production deployment not configured yet$(NC)"
 
+##@ Transcription
+.PHONY: setup-transcription
+setup-transcription: ## Set up transcription services (models, dependencies)
+	@echo "$(BLUE)Setting up transcription services...$(NC)"
+	@make setup-models
+	@make setup-env-example
+	@echo "$(GREEN)Transcription setup complete!$(NC)"
+	@echo "$(YELLOW)Configure your .env file with API keys to enable transcription$(NC)"
+
+.PHONY: setup-models
+setup-models: ## Download whisper models for offline transcription
+	@echo "$(BLUE)Setting up whisper models...$(NC)"
+	@mkdir -p models
+	@./scripts/download-models.sh
+	@echo "$(GREEN)Whisper models downloaded$(NC)"
+
+.PHONY: setup-env-example
+setup-env-example: ## Create example environment file
+	@echo "$(BLUE)Creating .env.example...$(NC)"
+	@echo "# VideoTranscript.app Configuration" > .env.example
+	@echo "PORT=3000" >> .env.example
+	@echo "API_KEY=your-api-key-here" >> .env.example
+	@echo "" >> .env.example
+	@echo "# Transcription Services (choose one or both for fallback)" >> .env.example
+	@echo "# AssemblyAI - Cloud transcription (416 free hours)" >> .env.example
+	@echo "ASSEMBLYAI_API_KEY=" >> .env.example
+	@echo "" >> .env.example
+	@echo "# Whisper Server - Local transcription (requires setup)" >> .env.example
+	@echo "WHISPER_SERVER_URL=" >> .env.example
+	@echo "WHISPER_MODEL_PATH=models/ggml-base.en.bin" >> .env.example
+	@echo "" >> .env.example
+	@echo "# Other Settings" >> .env.example
+	@echo "WORK_DIR=/tmp/videotranscript" >> .env.example
+	@echo "MAX_VIDEO_LENGTH=1800" >> .env.example
+	@echo "FREE_JOB_LIMIT=5" >> .env.example
+	@echo "$(GREEN).env.example created$(NC)"
+
+.PHONY: transcription-status
+transcription-status: ## Check transcription service status
+	@echo "$(BLUE)Checking transcription service status...$(NC)"
+	@echo "Environment Variables:"
+	@echo "  ASSEMBLYAI_API_KEY: $$([ -n "$$ASSEMBLYAI_API_KEY" ] && echo "✓ Set" || echo "✗ Not set")"
+	@echo "  WHISPER_SERVER_URL: $$([ -n "$$WHISPER_SERVER_URL" ] && echo "✓ Set" || echo "✗ Not set")"
+	@echo "  WHISPER_MODEL_PATH: $$([ -n "$$WHISPER_MODEL_PATH" ] && echo "✓ Set ($$WHISPER_MODEL_PATH)" || echo "✗ Not set")"
+	@echo ""
+	@echo "Models Directory:"
+	@echo "  models/: $$([ -d models ] && echo "✓ Exists" || echo "✗ Missing")"
+	@echo "  ggml-base.en.bin: $$([ -f models/ggml-base.en.bin ] && echo "✓ Downloaded" || echo "✗ Missing")"
+
+.PHONY: clean-models
+clean-models: ## Remove downloaded models
+	@echo "$(BLUE)Cleaning transcription models...$(NC)"
+	@rm -rf models/
+	@echo "$(GREEN)Models cleaned$(NC)"
+
 ##@ Utilities
 .PHONY: clean
 clean: ## Clean build artifacts

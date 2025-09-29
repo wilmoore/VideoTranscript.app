@@ -1,3 +1,4 @@
+github.com/AssemblyAI/assemblyai-go-sdk v1.8.0/go.mod h1:ytTvsjAVL+nXZnzBfDagQ/LxDQaKL9W/eTiCo3ZuPJA=
 github.com/ProtonMail/go-crypto v1.3.0 h1:ILq8+Sf5If5DCpHQp4PbZdS1J7HDFRXz/+xKBiRGFrw=
 github.com/ProtonMail/go-crypto v1.3.0/go.mod h1:9whxjD8Rbs29b4XWbB8irEcE8KHMqaR2e7GWU1R+/PE=
 github.com/andybalholm/brotli v1.1.0 h1:eLKJA0d02Lf0mVpIDgYnqXcUn0GqVmEFny3VuID1U3M=

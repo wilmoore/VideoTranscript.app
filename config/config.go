@@ -10,6 +10,8 @@ import (
 type Config struct {
 	Port             string
 	APIKey           string
+	AssemblyAIAPIKey string
+	WhisperServerURL string
 	WhisperModelPath string
 	WorkDir          string
 	MaxVideoLength   int
@@ -25,6 +27,8 @@ func Load() *Config {
 	return &Config{
 		Port:             getEnv("PORT", "3000"),
 		APIKey:           getEnv("API_KEY", "your-api-key-here"),
+		AssemblyAIAPIKey: getEnv("ASSEMBLYAI_API_KEY", ""),
+		WhisperServerURL: getEnv("WHISPER_SERVER_URL", ""),
 		WhisperModelPath: getEnv("WHISPER_MODEL_PATH", ""),
 		WorkDir:          getEnv("WORK_DIR", "/tmp/videotranscript"),
 		MaxVideoLength:   maxLength,
